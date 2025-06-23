@@ -1,0 +1,13 @@
+# Header with comments
+# Units: Hz, Ω, degrees
+
+1000    12.34    45.6    # First measurement
+2000    11.23    42.1
+
+# Empty lines should be skipped
+
+
+5000    9.87     38.5
+10000   8.76     35.2
+
+# Trailing comment

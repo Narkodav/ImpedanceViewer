@@ -1,5 +1,4 @@
 #include "MainWindow.h"
-#include "GraphWindow.h"
 
 #include <QApplication>
 #include <QLocale>
@@ -20,12 +19,7 @@ int main(int argc, char *argv[])
             break;
         }
     }
-    //MainWindow w;
-    //w.show();
-    //return a.exec();
-
-    GraphWindow window;
-    window.resize(800, 600);
-    window.show();
+    MainWindow w;
+    w.show();
     return a.exec();
 }

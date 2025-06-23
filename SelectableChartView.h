@@ -1,5 +1,5 @@
-#ifndef INTERACTIVECHARTVIEW_H
-#define INTERACTIVECHARTVIEW_H
+#ifndef SELECTABLECHARTVIEW_H
+#define SELECTABLECHARTVIEW_H
 
 #include <QMainWindow>
 #include <QtWidgets/QApplication>
@@ -17,7 +17,7 @@
 
 QT_USE_NAMESPACE
 
-class InteractiveChartView : public QChartView
+class SelectableChartView : public QChartView
 {
     Q_OBJECT
 private:
@@ -25,13 +25,13 @@ private:
     QPropertyAnimation *hoverAnimation;
 
 public:
-    InteractiveChartView(QChart *chart, QWidget *parent = nullptr)
+    SelectableChartView(QChart *chart, QWidget *parent = nullptr)
         : QChartView(chart, parent)
     {
         // Add a subtle shadow effect that we'll animate on hover
         shadowEffect = new QGraphicsDropShadowEffect(this);
         shadowEffect->setBlurRadius(0);  // Start with no shadow
-        shadowEffect->setColor(Qt::cyan);
+        shadowEffect->setColor(Qt::lightGray);
         shadowEffect->setOffset(0);
         this->setGraphicsEffect(shadowEffect);
 
@@ -79,6 +79,7 @@ signals:
 
 class ChartPopup : public QDialog
 {
+    Q_OBJECT
 public:
     ChartPopup(QChart *chart, QWidget *parent = nullptr)
         : QDialog(parent)
@@ -88,7 +89,10 @@ public:
 
         QChartView *chartView = new QChartView(chart);
         chartView->setRenderHint(QPainter::Antialiasing);
-        chartView->setRubberBand(QChartView::RectangleRubberBand);
+        //chartView->setRubberBand(QChartView::RectangleRubberBand);
+
+        chartView->setMouseTracking(true);
+        chartView->setDragMode(QChartView::ScrollHandDrag);
 
         QVBoxLayout *layout = new QVBoxLayout(this);
         layout->addWidget(chartView);
@@ -100,4 +104,4 @@ public:
     }
 };
 
-#endif // INTERACTIVECHARTVIEW_H
+#endif // SELECTABLECHARTVIEW_H

@@ -1,0 +1,4 @@
+1000    12.34    # Missing phase
+2000    11.23    42.1
+5000    nine-point-eight-seven    38.5  # Invalid number
+10000   8.76     35.2
