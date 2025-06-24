@@ -23,55 +23,62 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_AddReadingButton_clicked()
 {
-    auto filePath = QFileDialog::getOpenFileName(this,
-            tr("Reading selection"),
+    QStringList filePaths = QFileDialog::getOpenFileNames(this,
+            tr("Reading file selection"),
             QCoreApplication::applicationDirPath(),
-            tr("Text files (*.txt *.csv);;All Files (*)"));
-    if(filePath == "")
+            tr("Text files (*.txt *.csv *.lvm);;All Files (*)"));
+    if(filePaths.isEmpty())
         return;
-    ImpedanceReading reading;
-    if(ImpedanceReading::getReading(reading, filePath))
+    for(auto& filePath : filePaths)
     {
-        ui->graphViewWidget->addReading(std::move(reading), "Magnitude", "Phase");
-        auto list = ui->graphViewWidget->getList();
-        ui->magnitudeMatrixWidget->insertRow(list->count() - 1);
-        ui->magnitudeMatrixWidget->insertColumn(list->count() - 1);
-
-        ui->phaseMatrixWidget->insertRow(list->count() - 1);
-        ui->phaseMatrixWidget->insertColumn(list->count() - 1);
-
-        for(size_t i = 0; i < list->count(); i++)
+        ImpedanceReading reading;
+        if(ImpedanceReading::getReading(reading, filePath))
         {
-            auto seriesPair = ui->graphViewWidget->getChartsAt(i);
+            ui->graphViewWidget->addReading(std::move(reading), "Magnitude", "Phase");
+            auto list = ui->graphViewWidget->getList();
+            ui->magnitudeMatrixWidget->insertRow(list->count() - 1);
+            ui->magnitudeMatrixWidget->insertColumn(list->count() - 1);
 
-            try
-            {
-                auto value = calculatorMagnitude->getValue(reading.getMagnitudeSeries(), seriesPair.first);
-                ui->magnitudeMatrixWidget->setItem(i, list->count() - 1, new QTableWidgetItem(QString::number(value)));
-                ui->magnitudeMatrixWidget->setItem(list->count() - 1, i, new QTableWidgetItem(QString::number(value)));
+            ui->phaseMatrixWidget->insertRow(list->count() - 1);
+            ui->phaseMatrixWidget->insertColumn(list->count() - 1);
 
-                value = calculatorPhase->getValue(reading.getPhaseSeries(), seriesPair.second);
-                ui->phaseMatrixWidget->setItem(i, list->count() - 1, new QTableWidgetItem(QString::number(value)));
-                ui->phaseMatrixWidget->setItem(list->count() - 1, i, new QTableWidgetItem(QString::number(value)));
-            }
-            catch(std::runtime_error e)
+            for(size_t i = 0; i < list->count(); i++)
             {
-                QMessageBox::information(this, "Script runtime erorr", e.what());
-                return;
+                auto seriesPair = ui->graphViewWidget->getChartsAt(i);
+
+                try
+                {
+                    auto value = calculatorMagnitude->getValue(reading.getMagnitudeSeries(), seriesPair.first);
+                    ui->magnitudeMatrixWidget->setItem(i, list->count() - 1, new QTableWidgetItem(QString::number(value)));
+                    ui->magnitudeMatrixWidget->setItem(list->count() - 1, i, new QTableWidgetItem(QString::number(value)));
+
+                    value = calculatorPhase->getValue(reading.getPhaseSeries(), seriesPair.second);
+                    ui->phaseMatrixWidget->setItem(i, list->count() - 1, new QTableWidgetItem(QString::number(value)));
+                    ui->phaseMatrixWidget->setItem(list->count() - 1, i, new QTableWidgetItem(QString::number(value)));
+                }
+                catch(std::runtime_error e)
+                {
+                    QMessageBox::information(this, "Script runtime erorr", e.what());
+                    return;
+                }
             }
         }
     }
+    recolorTable(ui->magnitudeMatrixWidget);
+    recolorTable(ui->phaseMatrixWidget);
 }
 
 void MainWindow::on_graphViewWidget_chartRemoved(const size_t & row)
 {
     ui->magnitudeMatrixWidget->removeRow(row);
-    ui->magnitudeMatrixWidget->removeColumn(row);
+    ui->magnitudeMatrixWidget->removeColumn(row);    
 
     ui->phaseMatrixWidget->removeRow(row);
     ui->phaseMatrixWidget->removeColumn(row);
-}
 
+    recolorTable(ui->magnitudeMatrixWidget);
+    recolorTable(ui->phaseMatrixWidget);
+}
 
 void MainWindow::on_magnitudeMatrixCalculatorChange_clicked()
 {
@@ -98,6 +105,8 @@ void MainWindow::on_magnitudeMatrixCalculatorChange_clicked()
     updateMagnitudeMatrix();
 
     ui->useDefaultMagnitudeCalculator->show();
+    recolorTable(ui->magnitudeMatrixWidget);
+    recolorTable(ui->phaseMatrixWidget);
 }
 
 void MainWindow::on_phaseMatrixCalculatorChange_clicked()
@@ -125,6 +134,8 @@ void MainWindow::on_phaseMatrixCalculatorChange_clicked()
     updatePhaseMatrix();
 
     ui->useDefaultPhaseCalculator->show();
+    recolorTable(ui->magnitudeMatrixWidget);
+    recolorTable(ui->phaseMatrixWidget);
 }
 
 void MainWindow::on_useDefaultMagnitudeCalculator_clicked()
@@ -136,6 +147,8 @@ void MainWindow::on_useDefaultMagnitudeCalculator_clicked()
     updateMagnitudeMatrix();
 
     ui->useDefaultMagnitudeCalculator->hide();
+    recolorTable(ui->magnitudeMatrixWidget);
+    recolorTable(ui->phaseMatrixWidget);
 }
 
 
@@ -148,6 +161,8 @@ void MainWindow::on_useDefaultPhaseCalculator_clicked()
     updatePhaseMatrix();
 
     ui->useDefaultPhaseCalculator->hide();
+    recolorTable(ui->magnitudeMatrixWidget);
+    recolorTable(ui->phaseMatrixWidget);
 }
 
 void MainWindow::updateMagnitudeMatrix()
@@ -198,5 +213,56 @@ void MainWindow::updatePhaseMatrix()
             }
         }
     }
+}
+
+void MainWindow::recolorTable(QTableWidget* table)
+{
+    double minVal = findMin(table);
+    if (minVal == 0) minVal = 0.000000001; // Avoid division by zero
+
+    for (int row = 0; row < table->rowCount(); ++row) {
+        for (int col = row + 1; col < table->columnCount(); ++col) {
+            if (QTableWidgetItem* item = table->item(row, col)) {
+                bool ok = false;
+                double value = item->text().toDouble(&ok);
+                if (ok) {
+                    // Normalize value between 0 and 1
+                    double normalized = minVal / value;
+
+                    // Calculate gradient color (green to red)
+                    int red = static_cast<int>(255 * (1 - normalized));
+                    int green = static_cast<int>(255 * normalized);
+                    int blue = 0;
+
+                    // Set background color
+                    item->setBackground(QColor(red, green, blue));
+
+                    // Set text color for better contrast
+                    //item->setForeground(normalized > 0.5 ? Qt::white : Qt::black);
+
+                    QTableWidgetItem* itemOp = table->item(col, row);
+                    itemOp->setBackground(QColor(red, green, blue));
+                    //itemOp->setForeground(normalized > 0.5 ? Qt::white : Qt::black);
+                }
+            }
+        }
+    }
+}
+
+double MainWindow::findMin(QTableWidget* table)
+{
+    double minVal = std::numeric_limits<double>::max();
+    for (int row = 0; row < table->rowCount(); ++row) {
+        for (int col = row + 1; col < table->columnCount(); ++col) {
+            if (QTableWidgetItem* item = table->item(row, col)) {
+                bool ok;
+                double value = item->text().toDouble(&ok);
+                if (ok && value < minVal) {
+                    minVal = value;
+                }
+            }
+        }
+    }
+    return minVal;
 }
 

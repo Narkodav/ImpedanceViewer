@@ -37,8 +37,8 @@ public:
 
         // Create list widget with drag and drop enabled
         listWidget = new QListWidget();
-        listWidget->setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
-        listWidget->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+        listWidget->setDragDropMode(QAbstractItemView::DragDropMode::NoDragDrop);
+        listWidget->setSelectionMode(QAbstractItemView::SelectionMode::NoSelection);
         listWidget->setStyleSheet("QListWidget { border: none; }");
         listWidget->setSpacing(10);
         mainLayout->addWidget(listWidget);

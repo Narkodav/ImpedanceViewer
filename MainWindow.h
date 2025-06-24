@@ -39,6 +39,8 @@ private slots:
 private:
     void updateMagnitudeMatrix();
     void updatePhaseMatrix();
+    void recolorTable(QTableWidget* table);
+    double findMin(QTableWidget* table);
 
 private:
     Ui::MainWindow *ui;

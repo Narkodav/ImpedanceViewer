@@ -92,7 +92,6 @@ public:
         //chartView->setRubberBand(QChartView::RectangleRubberBand);
 
         chartView->setMouseTracking(true);
-        chartView->setDragMode(QChartView::ScrollHandDrag);
 
         QVBoxLayout *layout = new QVBoxLayout(this);
         layout->addWidget(chartView);

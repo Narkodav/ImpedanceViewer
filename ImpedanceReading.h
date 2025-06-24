@@ -25,7 +25,7 @@ public:
             QTextStream stream(&file);
 
             // Regular expression to split on spaces, tabs, or commas
-            QRegularExpression re("(\\s+|,|\\t)");
+            QRegularExpression re("(\\s+|,(?=\\s)|\\t)");
 
             //skip first line if necessary
             if (!stream.atEnd())
@@ -43,7 +43,8 @@ public:
             }
             file.close();
         }
-        if(reading.getMagnitudeSeries()->count() == 0 || reading.getPhaseSeries()->count() == 0)
+        if(reading.getMagnitudeSeries()->count() == 0 || reading.getPhaseSeries()->count() == 0 ||
+            reading.getMagnitudeSeries()->count() != reading.getPhaseSeries()->count())
             return false;
         return true;
     }
@@ -63,8 +64,11 @@ private:
         // We need exactly 3 columns: frequency, magnitude, phase
         if (parts.size() >= 3) {
             bool ok1, ok2, ok3;
+            parts[0].replace(',', '.');
             double frequency = parts[0].toDouble(&ok1);
+            parts[1].replace(',', '.');
             double magnitude = parts[1].toDouble(&ok2);
+            parts[2].replace(',', '.');
             double phase = parts[2].toDouble(&ok3);
 
             if (ok1 && ok2 && ok3) {
